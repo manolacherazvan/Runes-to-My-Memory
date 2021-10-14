@@ -16,7 +16,9 @@ public class Rune : MonoBehaviour
     {
         runeCover.SetActive(true);
         runeSprite.sprite = GameManager.instance.runeSpriteArray[index];
+        indexText.gameObject.SetActive(GameManager.instance.getDebugMode());
         indexText.text = index.ToString();
+       
     }
 
     private void OnMouseEnter()

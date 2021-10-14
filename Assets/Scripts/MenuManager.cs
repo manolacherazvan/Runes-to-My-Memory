@@ -9,6 +9,7 @@ public class MenuManager : MonoBehaviour
     public GameObject DificultyMenu;
     public GameObject CreditsMenu;
     public GameObject OverlayCanvas;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -37,7 +38,7 @@ public class MenuManager : MonoBehaviour
         GameManager.instance.UpdateGameState(GameState.Credits);
     }
 
-
+  
 
     public void selectDificuty(int i)
     {
@@ -52,5 +53,9 @@ public class MenuManager : MonoBehaviour
 
         }
         GameManager.instance.UpdateGameState(GameState.Play);
+    }
+    public void quitGame()
+    {
+        Application.Quit();
     }
 }

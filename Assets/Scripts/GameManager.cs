@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
 
     public int[] eligibleRunes;
 
+    Boolean debbugingMode=false;
     private void Awake()
     {
         instance = this;
@@ -112,12 +113,7 @@ public class GameManager : MonoBehaviour
             eligibleRunes[i] = UnityEngine.Random.Range(1, 35);
             eligibleRunes[i + eligibleRunes.Length / 2] = eligibleRunes[i];
         }
-        foreach(int value in eligibleRunes)
-        {
-            Debug.Log(value);
-        }
         shuffleEligibleRunes();
-        Debug.Log("---");
         runeIndexes = new int[randuri, coloane];
         Runes = new GameObject[randuri, coloane];
         int indexEligibleRune = 0;
@@ -154,14 +150,12 @@ public class GameManager : MonoBehaviour
                 secondSelectedRune = rune;
                 secondSelectedRune.GetComponent<Rune>().showRune();
                 StartCoroutine(checkRunes());
-
             }
         }
         else
         {
             Debug.Log("Wait");
         }
-
     }
 
     IEnumerator checkRunes()
@@ -187,7 +181,22 @@ public class GameManager : MonoBehaviour
         checkingRunes = false;
         Debug.Log("Finished Checking runes");
     }
-   
+
+    public void setDebugMode()
+    {
+        if (!debbugingMode)
+        {
+            debbugingMode = true;
+        }
+        else
+        {
+            debbugingMode = false;
+        }
+    }
+    public bool getDebugMode()
+    {
+        return debbugingMode;
+    }
     private void handleWinScreenState()
     {
 
