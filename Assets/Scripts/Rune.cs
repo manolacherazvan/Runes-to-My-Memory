@@ -10,7 +10,7 @@ public class Rune : MonoBehaviour
     public SpriteRenderer runeSprite;
     int index;
     public TMP_Text indexText;
-    
+    public ParticleSystem particle;
 
     private void Start()
     {
@@ -18,9 +18,7 @@ public class Rune : MonoBehaviour
         runeSprite.sprite = GameManager.instance.runeSpriteArray[index];
         indexText.gameObject.SetActive(GameManager.instance.getDebugMode());
         indexText.text = index.ToString();
-       
     }
-
     private void OnMouseEnter()
     {
         highlighter.SetActive(true);
@@ -48,5 +46,10 @@ public class Rune : MonoBehaviour
     public void coverRune()
     {
         runeCover.SetActive(true);
+    }
+    private void OnDestroy()
+    {
+        ParticleSystem pe = Instantiate(particle, gameObject.transform.position, gameObject.transform.rotation);
+        pe.Play();
     }
 }

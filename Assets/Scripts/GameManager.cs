@@ -14,20 +14,29 @@ public class GameManager : MonoBehaviour
     private Dificulty selectedDificulty;
 
     public GameObject GridHolder;
+    public MenuManager MenuManager;
 
-    public GameObject OverlayCanvas;
+    public Sprite[] runeSpriteArray;
+
+    public GameObject[,] Runes;
 
     public int[,] runeIndexes;
-    public Sprite[] runeSpriteArray;
-    public GameObject[,] Runes;
 
     GameObject firstSelectedRune;
     GameObject secondSelectedRune;
+
     Boolean checkingRunes=false;
 
-    public int[] eligibleRunes;
+    private int numberOfRunes=0;
+
+    private int points;
+    private int comboPoints;
+    private int moves;
 
     Boolean debbugingMode=false;
+
+    public Camera maincamera;
+
     private void Awake()
     {
         instance = this;
@@ -37,21 +46,12 @@ public class GameManager : MonoBehaviour
     {
         UpdateGameState(GameState.Menu);
     }
-
-
-    void Update()
-    {
-
-    }
     public void UpdateGameState(GameState newState)
     {
         State = newState;
         switch (newState) {
             case GameState.Menu:
-                handleMenuState();
-                break;
-            case GameState.DifficultySelect:
-                handleDifficultySelectState();
+                HandleMenuState();
                 break;
             case GameState.Play:
                 handlePlayState();
@@ -67,66 +67,68 @@ public class GameManager : MonoBehaviour
         OnGameStateChanged?.Invoke(newState);
     }
 
-    private void handleMenuState()
+    private void HandleMenuState()
     {
         GridHolder.SetActive(State == GameState.Play);
-        OverlayCanvas.SetActive(State == GameState.Play);
-
+        MenuManager.OverlayCanvas.SetActive(State == GameState.Play);
+        clearGame();
+    }
+    private void clearGame()
+    {
+        maincamera.backgroundColor = new Color(0.09f, 0.1f, 0.1f);
         GameObject[] cachedRunes = GameObject.FindGameObjectsWithTag("Rune");
         foreach (GameObject cachedRune in cachedRunes)
             GameObject.Destroy(cachedRune);
+        GameObject[] cachedParticles = GameObject.FindGameObjectsWithTag("Particles");
+        foreach (GameObject cachedParticle in cachedParticles)
+            GameObject.Destroy(cachedParticle);
+        runeIndexes = null;
+        Runes = null;
+        points = 0;
+        comboPoints = 0;
+        moves = 0;
     }
-
-    private void handleDifficultySelectState()
-    {
-
-    }
-    public void setDificulty(Dificulty dificulty)
-    {
-        this.selectedDificulty = dificulty;
-    }
-
     private void handlePlayState()
     {
         GridHolder.SetActive(State == GameState.Play);
-        OverlayCanvas.SetActive(State == GameState.Play);
+        MenuManager.OverlayCanvas.SetActive(State == GameState.Play);
         switch (selectedDificulty)
         {
-            case Dificulty.Normal:
+            case Dificulty.Easy:
                 generateRuneIndex(4, 4);
                 GridHolder.GetComponent<GridManager>().generateGrid(4, 4);
                 break;
             case Dificulty.Hard:
-                generateRuneIndex(8, 8);
-                GridHolder.GetComponent<GridManager>().generateGrid(6, 8);
+                generateRuneIndex(4, 8);
+                GridHolder.GetComponent<GridManager>().generateGrid(4, 8);
                 break;
         }
     }
-
     private void generateRuneIndex(int randuri, int coloane)
     {
-        int numarRune = randuri * coloane;
-        eligibleRunes = new int[numarRune];
-
+        int[] eligibleRunes;
+        numberOfRunes = randuri * coloane;
+        eligibleRunes = new int[numberOfRunes];
         for (int i = 0; i < eligibleRunes.Length/2; i++)
         {
             eligibleRunes[i] = UnityEngine.Random.Range(1, 35);
             eligibleRunes[i + eligibleRunes.Length / 2] = eligibleRunes[i];
         }
-        shuffleEligibleRunes();
+        shuffleEligibleRunes(eligibleRunes);
+
         runeIndexes = new int[randuri, coloane];
         Runes = new GameObject[randuri, coloane];
         int indexEligibleRune = 0;
-        for (int i = 0; i < coloane; i++)
+        for (int i = 0; i < randuri; i++)
         {
-            for (int j = 0; j < randuri; j++)
+            for (int j = 0; j <coloane ; j++)
             {
                 runeIndexes[i, j] = eligibleRunes[indexEligibleRune];
                 indexEligibleRune++;
             }
         }
     }
-    void shuffleEligibleRunes()
+    void shuffleEligibleRunes(int[] eligibleRunes)
     {
         for (int t = 0; t < eligibleRunes.Length; t++)
         {
@@ -138,12 +140,15 @@ public class GameManager : MonoBehaviour
     }
     public void selectRune(GameObject rune)
     {
-        if (!checkingRunes)
+        if (!checkingRunes)    
         {
+            moves++;
+            AudioManager.instance.PlayRuneSound();
             if (firstSelectedRune == null)
             {
                 firstSelectedRune = rune;
                 firstSelectedRune.GetComponent<Rune>().showRune();
+                firstSelectedRune.GetComponent<BoxCollider2D>().enabled = false;
             }
             else
             {
@@ -162,26 +167,42 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Started Checking runes");
         checkingRunes = true;
-
+        maincamera.backgroundColor =new Color(0.09f,0.1f,0.1f);
         yield return new WaitForSeconds(1);
 
         if (firstSelectedRune.GetComponent<Rune>().getIndex() == secondSelectedRune.GetComponent<Rune>().getIndex())
         {
-            Debug.Log("it works: " + firstSelectedRune.GetComponent<Rune>().getIndex() + "=" + secondSelectedRune.GetComponent<Rune>().getIndex());
+            AudioManager.instance.PlayRuneBoomSound();
+            Debug.Log("Match: " + firstSelectedRune.GetComponent<Rune>().getIndex() + "=" + secondSelectedRune.GetComponent<Rune>().getIndex());
             Destroy(firstSelectedRune.gameObject);
             Destroy(secondSelectedRune.gameObject);
+            numberOfRunes -= 2;
+            comboPoints += 1;
+            addPoints();
+            maincamera.backgroundColor = new Color(0.09f, 0.1f, 0.15f);
         }
         else
         {
+            comboPoints = 0;
+            firstSelectedRune.GetComponent<BoxCollider2D>().enabled = true;
             firstSelectedRune.GetComponent<Rune>().coverRune();
             secondSelectedRune.GetComponent<Rune>().coverRune();
+            maincamera.backgroundColor = new Color(0.15f, 0.1f, 0.1f);
         }
         firstSelectedRune = null;
         secondSelectedRune = null;
         checkingRunes = false;
-        Debug.Log("Finished Checking runes");
+        
+        if (numberOfRunes == 0)
+        {
+            UpdateGameState(GameState.WinScreen);
+        }
     }
-
+    private void handleWinScreenState()
+    {
+        MenuManager.OverlayCanvas.SetActive(false);
+        MenuManager.WinScreen.SetActive(true);
+    }
     public void setDebugMode()
     {
         if (!debbugingMode)
@@ -197,16 +218,40 @@ public class GameManager : MonoBehaviour
     {
         return debbugingMode;
     }
-    private void handleWinScreenState()
+
+    public void addPoints()
     {
-
+        points += 10*comboPoints;
     }
-}
+    public int getPoints()
+    {
+        return points;
+    }
+    public int getComboPoints()
+    {
+        return comboPoints;
+    }
+    public int getMoves()
+    {
+        return moves;
+    }
+    public bool getCheckingRunes()
+    {
+        return this.checkingRunes;
+    }
+    public void setDificulty(Dificulty dificulty)
+    {
+        this.selectedDificulty = dificulty;
+    }
+    public Dificulty getDificulty()
+    {
+        return selectedDificulty;
+    }
 
+}
 public enum GameState
 {
     Menu,
-    DifficultySelect,
     Play,
     WinScreen,
     LoseScreen,
@@ -214,6 +259,6 @@ public enum GameState
 }
 public enum Dificulty
 {
-    Normal,
+    Easy,
     Hard
 }

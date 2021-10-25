@@ -12,7 +12,6 @@ public class GridManager : MonoBehaviour
 
     public GameObject runePrefab;
 
-    public Sprite[] spriteArray;
 
 
     private void calculateOffset(int randuri, int coloane)
@@ -25,11 +24,11 @@ public class GridManager : MonoBehaviour
     {
         calculateOffset(randuri, coloane);
 
-        for (int i = 0; i < coloane; i++)
+        for (int i = 0; i < randuri; i++)
         {
-            for (int j = 0; j < randuri; j++)
+            for (int j = 0; j < coloane; j++)
             {
-                GameManager.instance.Runes[i,j] = (GameObject)Instantiate(runePrefab, new Vector3(i * tileSizeX - offsetX, j * -tileSizeY + offsetY), Quaternion.identity);
+                GameManager.instance.Runes[i,j] = (GameObject)Instantiate(runePrefab, new Vector3(j * tileSizeX - offsetX, i * -tileSizeY + offsetY), Quaternion.identity);
                 GameManager.instance.Runes[i, j].name = $"Rune{GameManager.instance.runeIndexes[i, j]}: {i} {j}";
                 GameManager.instance.Runes[i, j].GetComponent<Rune>().setIndex(GameManager.instance.runeIndexes[i, j]);
             }
