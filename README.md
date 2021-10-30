@@ -4,9 +4,6 @@
 - In this project I learnt how to setup a propely GameManager script, with a game state machine.
 
 # Resources
-
-For this project, I used:
--------------
 - Kenney's Rune Pack  (SpriteSheet)
 - Kenney's UI pack: RPG extension (SpriteSheet)
 - CosmicD's  Annulet of absorption (SFX)
